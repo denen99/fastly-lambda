@@ -31,3 +31,5 @@ target
 
 # jenv
 .java-version
+
+src/main/resources/*.conf
