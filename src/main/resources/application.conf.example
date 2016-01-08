@@ -2,3 +2,8 @@ event-types {
   mydomain.com="FastlyProd"
   default="FastlyDebug"
 }
+
+newrelic {
+  apikey="YOUR-API-KEY"
+  apiUrl="https://insights-collector.newrelic.com/v1/accounts/YOURACCOUNT/events"
+}
