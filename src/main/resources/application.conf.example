@@ -1,0 +1,4 @@
+event-types {
+  mydomain.com="FastlyProd"
+  default="FastlyDebug"
+}
