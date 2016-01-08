@@ -2,9 +2,18 @@ package com.iheart.lambda
 
 import java.text.SimpleDateFormat
 import java.util.regex.Pattern
+import com.amazonaws.services.logs.model.{InputLogEvent, PutLogEventsRequest}
+import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.services.s3.model.GetObjectRequest
+import com.amazonaws.services.logs._
+import com.amazonaws.services.logs.model._
 import org.json4s.{FieldSerializer, DefaultFormats}
 import org.json4s.native.Serialization.write
 import com.typesafe.config._
+import scala.collection.JavaConversions._
+
+
+import scala.io.Source
 
 case class LogEntry(fastlyHost: String,
                     ip: String,
@@ -12,8 +21,9 @@ case class LogEntry(fastlyHost: String,
                     httpMethod: String,
                     uri: String,
                     hostname: String,
-                    statusCode: Int,
+                    statusCode: String,
                     hitMiss: String,
+                    referrer: String,
                     eventType: String = "FastlyDebug")
 
 object Utils {
@@ -26,6 +36,11 @@ object Utils {
   }
 
   val conf = ConfigFactory.load()
+  val s3Client = new AmazonS3Client()
+  val cwlClient = new AWSLogsClient()
+  val cwlLogGroup = "/aws/lambda/fastlyLogProcessorSkips"
+  val cwlLogStream = "Skips"
+
 
   def getEventType(hostname: String) = {
     val key = "event-types." + hostname
@@ -33,6 +48,19 @@ object Utils {
       case true => conf.getString(key)
       case false => conf.getString("default")
     }
+  }
+
+  def parseLogFile(bucket: String, key: String): Seq[Option[LogEntry]] = {
+    val s3Object = s3Client.getObject(new GetObjectRequest(bucket,key))
+    val data = Source.fromInputStream(s3Object.getObjectContent).getLines()
+    data.map(parseRecord(_)).toSeq
+  }
+
+  def sendCloudWatchLog(log: String) = {
+     println("Skipping cloudwatch log: " + log)
+     //val event = new InputLogEvent
+     //event.setMessage(log)
+     //cwlClient.putLogEvents(new PutLogEventsRequest(cwlLogGroup,cwlLogStream,List(event)))
   }
 
   def parseDate(d: String): Long = {
@@ -46,12 +74,12 @@ object Utils {
     val date = """(\S{3}\,\s*\d{1,2}\s+\S{3}\s+\d{4}\s+\d{2}\:\d{2}\:\d{2}\s+\S+)""".r
     val statusCode = """(\d{3})""".r
     val ip = """(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})?""".r
-    val hitmiss = """(\S+)""".r
+    val hitmiss = """(HIT|MISS)(?:\s*,\s*(?:HIT|MISS))*""".r
     val url = """([^ ]+)""".r
     val hostname = """(\S+)""".r
     val httpMethod = """(\S+)""".r
 
-    val regex = s"$fastlyHost\\s+$ip\\s+$date\\s+$httpMethod\\s+$url\\s+$hostname\\s+$statusCode\\s+$hitmiss"
+    val regex = s"$fastlyHost\\s+$ip\\s+$date\\s+$httpMethod\\s+$url\\s+$hostname\\s+$statusCode\\s+$hitmiss\\s+$url"
 
     val p = Pattern.compile(regex)
     val matcher = p.matcher(line)
@@ -63,9 +91,13 @@ object Utils {
                    matcher.group(4),
                    matcher.group(5),
                    matcher.group(6),
-                   matcher.group(7).toInt,
-                   matcher.group(8)))
-    else
+                   matcher.group(7),
+                   matcher.group(8),
+                   matcher.group(9)))
+    else {
+     sendCloudWatchLog(line)
      None
+    }
+
   }
 }
