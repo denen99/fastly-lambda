@@ -19,8 +19,8 @@ object AmazonHelpers {
   //val cwlLogStream = "Skips"
 
   def cwlLogStream() = {
-    val s = new SimpleDateFormat("YYYY-MM-DD:HH:mm")
-    "skips-" + s.format(new Date())
+    val s = new SimpleDateFormat("YYYY-MMDD-HH-mm")
+    s.format(new Date())
   }
 
   def readFileFromS3(bucket: String, key: String) = {
@@ -29,7 +29,8 @@ object AmazonHelpers {
   }
 
   def getCloudSeqToken(logStream: String) = {
-    val descResult = cwlClient.describeLogStreams(new DescribeLogStreamsRequest().withLogStreamNamePrefix(logStream))
+    val req = new DescribeLogStreamsRequest(cwlLogGroup).withLogStreamNamePrefix(logStream)
+    val descResult = cwlClient.describeLogStreams(req)
     if (descResult != null && descResult.getLogStreams != null && !descResult.getLogStreams.isEmpty) {
       descResult.getLogStreams.last.getUploadSequenceToken
     }
