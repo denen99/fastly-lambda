@@ -1,18 +1,13 @@
 package com.iheart.lambda
 
 import java.net.URLDecoder
-
-import com.amazonaws.services.s3.internal.ServiceUtils
 import com.iheart.lambda.Utils._
-import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.model.GetObjectRequest
 import play.api.libs.ws.ning.NingWSClient
 import scala.collection.JavaConverters._
 import com.amazonaws.services.lambda.runtime.events.S3Event
 import com.amazonaws.services.lambda.runtime.Context
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.io.Source
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
@@ -35,7 +30,10 @@ class Main {
 
   }
 
-
+  /*********************************************
+    * This is the function Lambda calls with the
+    * S3 callback
+  ************************************************/
   def handleEvent(event: S3Event, context: Context) = {
     event.getRecords.asScala.foreach { record =>
        val bucket = record.getS3.getBucket.getName
