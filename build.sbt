@@ -18,7 +18,8 @@ lazy val root = (project in file(".")).
     libraryDependencies += "org.json4s" %% "json4s-native" % "3.3.0",
     libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.3.0",
     libraryDependencies += "com.typesafe.play" %% "play-ws" % "2.4.4",
-    libraryDependencies += "com.typesafe" % "config" % "1.3.0"
+    libraryDependencies += "com.typesafe" % "config" % "1.3.0",
+    libraryDependencies += "org.specs2" %% "specs2-core" % "3.7" % "test"
   )
 
 assemblyMergeStrategy in assembly  :=

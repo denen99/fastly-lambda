@@ -2,11 +2,12 @@ package com.iheart.lambda
 
 import java.net.URLDecoder
 import com.iheart.lambda.Utils._
+import play.api.libs.ws.WSResponse
 import play.api.libs.ws.ning.NingWSClient
 import scala.collection.JavaConverters._
 import com.amazonaws.services.lambda.runtime.events.S3Event
 import com.amazonaws.services.lambda.runtime.Context
-import scala.concurrent.Await
+import scala.concurrent.{Future, Await}
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -15,17 +16,17 @@ class Main {
 
   val wsClient = NingWSClient()
 
-  def sendToNewRelic(entries: Seq[Option[LogEntry]]) = {
+  def sendToNewRelic(entries: Seq[Option[LogEntry]]): Either[EmptyResponse,WSResponse] = {
     val validEntries = entries.flatMap(y => y)
     validEntries.isEmpty match {
-      case true => Nil
+      case true => Left("Skip")
       case _ =>
         val json = validEntries.asJ
         //println("Sending JSON: " + json)
         val respF = wsClient.url(insightUrl)
           .withHeaders(("X-Insert-Key", insightApiKey), ("Content-Type", "application/json"))
           .post(json)
-        Await.result(respF,Duration.Inf)
+        Right(Await.result(respF,Duration.Inf))
     }
 
   }
