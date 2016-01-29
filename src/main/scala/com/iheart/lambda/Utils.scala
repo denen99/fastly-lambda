@@ -7,17 +7,6 @@ import org.json4s.native.Serialization.write
 import com.typesafe.config._
 import play.Logger
 
-//case class LogEntry(fastlyHost: String,
-//                    ip: String,
-//                    timestamp: Long,
-//                    httpMethod: String,
-//                    uri: String,
-//                    hostname: String,
-//                    statusCode: String,
-//                    hitMissShield: String,
-//                    hitMissEdge: String,
-//                    referrer: String,
-//                    eventType: String = "FastlyDebug")
 
 case class LogEntry(fields: Map[String,Any])
 

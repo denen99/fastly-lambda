@@ -8,17 +8,6 @@ import scala.collection.JavaConversions._
 
 class LambdaSpec extends Specification with AmazonStub {
 
-  //case class LogEntry(fastlyHost: String,
-//  ip: String,
-//  timestamp: Long,
-//  httpMethod: String,
-//  uri: String,
-//  hostname: String,
-//  statusCode: String,
-//  hitMiss: String,
-//  referrer: String,
-//  eventType: String = "FastlyDebug")
-
 
   "Lambda Application" should {
 
