@@ -37,3 +37,8 @@ When configuring the Lambda app, make sure you use the following string for the 
 Additionally, make sure you have enough memory to handle your logfiles (we use 512Mb to be safe).  A few rounds of testing should show you in the console how much memory your app is using.  Also, i would safely bump up the timeout to the max of 59 seconds.  Some of the jvm warmup times can be quite slow, coupled with the time it takes to read a potentially large file off of S3.  We noticed, that sending data more frequently is actually a lot more performant, b/c lambda is not constantly restarting a new jvm, but re-using a warm one.    
 
 Also, remember, you need to configure the source S3 bucket with the right permissions to invoke your Lambda app.  Under "Event Sources" in your Lambda app you should see an S3 bucket that reacts to "Object Created".
+
+## NewRelic
+Once you are wired up you should see data in NewRelic almost instantly.  Keep in mind Fastly supports sending a lot of custom fields like cache HIT/MISS, Fastly Datacenter, Referrers, etc.  All really valuable stuff to give you fine grain visibility into your data.  You can then run super cool queries like this that will show the cache hitrate for a URL regex
+
+    SELECT count(uri) FROM Fastly SINCE 1 HOUR AGO where uri like ‘%/someuri%’ FACET hitMiss TIMESERIES
