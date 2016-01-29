@@ -26,6 +26,10 @@ There are 2 special fieldnames that are used in this model, "hostname" and "time
 
 The second special field is "timestamp".  NewRelic can accept a timestamp field that correlates to the timestamp of the event, versus the time of the API request.  Additionally, you need to specify a "dateformat" config parameter which will allow the app to convert the date format in the logfile to a proper Epoch time format. If there is no timestamp in the provided fields, NewRelic will just use the timestamp of the event.
 
+## Testing
+
+You can create an application.test.conf to simulate your actual configuration.  You can then modify any of the unit tests with some of your own data to confirm your regexes are working as expected.  Simply run `sbt test` once you update.  
+
 ## Lambda 
 
 A few things to keep in mind when deploying your app in Lambda.  
