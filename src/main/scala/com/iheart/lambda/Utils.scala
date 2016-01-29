@@ -115,7 +115,7 @@ object Utils  {
   ************************************************************/
   def parseRecord(line: String): Option[LogEntry] = {
 
-    val matcher = pattern.matcher(line)
+    val matcher = pattern.j(line)
 
     if (matcher.find())
       Some(LogEntry(buildMap(matcher,matcher.groupCount())))
