@@ -1,22 +1,25 @@
 package com.iheart.lambda
 
 import java.text.SimpleDateFormat
-import java.util.regex.Pattern
+import java.util.regex.{Matcher, Pattern}
 import org.json4s.{FieldSerializer, DefaultFormats}
 import org.json4s.native.Serialization.write
 import com.typesafe.config._
+import play.Logger
 
-case class LogEntry(fastlyHost: String,
-                    ip: String,
-                    timestamp: Long,
-                    httpMethod: String,
-                    uri: String,
-                    hostname: String,
-                    statusCode: String,
-                    hitMissShield: String,
-                    hitMissEdge: String,
-                    referrer: String,
-                    eventType: String = "FastlyDebug")
+//case class LogEntry(fastlyHost: String,
+//                    ip: String,
+//                    timestamp: Long,
+//                    httpMethod: String,
+//                    uri: String,
+//                    hostname: String,
+//                    statusCode: String,
+//                    hitMissShield: String,
+//                    hitMissEdge: String,
+//                    referrer: String,
+//                    eventType: String = "FastlyDebug")
+
+case class LogEntry(fields: Map[String,Any])
 
 object Utils  {
 
@@ -32,15 +35,7 @@ object Utils  {
   type EmptyResponse = String
 
   val conf = ConfigFactory.load()
-  val fastlyHost = """[^ ]+\s+([^ ]+)\s+AmazonS3\[\d+\]\:""".r
-  val date = """(\S{3}\,\s*\d{1,2}\s+\S{3}\s+\d{4}\s+\d{2}\:\d{2}\:\d{2}\s+\S+)""".r
-  val statusCode = """(\d{3})""".r
-  val ip = """(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})?""".r
-  val hitmiss = """((?:HIT|MISS)(?:\s*,\s*(?:HIT|MISS))*?)""".r
-  val urlR = """([^ ]+)""".r
-  val hostname = """(\S+)""".r
-  val httpMethod = """(\S+)""".r
-  val regex = s"$fastlyHost\\s+$ip\\s+$date\\s+$httpMethod\\s+$urlR\\s+$hostname\\s+$statusCode\\s+$hitmiss\\s+$urlR"
+  val regex = conf.getString("regex.pattern")
   val pattern = Pattern.compile(regex)
   val insightApiKey = conf.getString("newrelic.apikey")
   val insightUrl = conf.getString("newrelic.apiUrl")
@@ -73,41 +68,57 @@ object Utils  {
     * to EPOCH format
   **********************************************/
   def parseDate(date: String): Long = {
-    val fmt = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz")
+    val fmt = new SimpleDateFormat(conf.getString("regex.dateformat"))
     val res = fmt.parse(date)
     res.getTime / 1000
   }
 
-  def hitMissShield(s: String) =
-    s.split(",")(0)
 
-
-  def hitMissEdge(s: String) = s.split(",").length match {
-    case i if i >= 2 => s.split(",")(1).replace(" ","")
-    case  _ => "NONE"
+  /*****************************************************************
+  * 2 keys in the map are special, hostname and timestamp.  NewRelic
+  * uses the timestamp field in the JSON as the date they store.  The
+  * hostname field is used to map to a custom eventType field. The
+  * eventType field is how NewRelic stores different events inside
+  * of Insights.
+  ********************************************************************/
+  def formatValue(key: String, value: Any): Map[String,Any] = key match {
+    case "timestamp" => Map(key -> parseDate(value.asInstanceOf[String]))
+    case "hostname" => Map(key -> value, "eventType" -> getEventType(key))
+    case _ => Map(key -> value)
   }
 
+  /*****************************************************
+  * NewRelic requires a field called eventType ,
+  * so we ensure its there
+  ******************************************************/
+  def ensureEventType(m: Map[String,Any]) = m.get("eventType") match {
+    case None => Map("eventType" -> conf.getString("event-types.defualt"))
+    case _ => Map()
+  }
 
   /**************************************************
-    * compiles Regex against log entry to build a
-    * LogEntry class
+  * compiles Regex against log entry to build a
+  * a map used to create a LogEntry class
   **************************************************/
+
+  def buildMap(matcher: Matcher,count: Int, m: Map[String,Any] = Map()): Map[String,Any] = count match {
+    case 0 => m ++ ensureEventType(m)
+    case _ if conf.hasPath("regex." + count.toString) =>
+             val key = conf.getString("regex." + count.toString)
+             buildMap(matcher,count-1, m ++ formatValue(key,matcher.group(count)))
+    case _ => buildMap(matcher,count-1,m)  //no regex.COUNT in application.conf
+  }
+
+  /**********************************************************
+  * This is the method that gets passes an entry from
+  * the logfile, parses it and returns an Option[LogEntry]
+  ************************************************************/
   def parseRecord(line: String): Option[LogEntry] = {
 
-    val matcher = pattern.matcher(line)
+    val matcher = pattern.j(line)
 
     if (matcher.find())
-     Some(LogEntry(fastlyHost = matcher.group(1),
-                   ip = matcher.group(2),
-                   timestamp = parseDate(matcher.group(3)),
-                   httpMethod = matcher.group(4),
-                   uri = matcher.group(5),
-                   hostname = matcher.group(6),
-                   statusCode = matcher.group(7),
-                   hitMissShield = hitMissShield(matcher.group(8)),
-                   hitMissEdge = hitMissEdge(matcher.group(8)),
-                   referrer = matcher.group(9),
-                   eventType = getEventType(matcher.group(6))))
+      Some(LogEntry(buildMap(matcher,matcher.groupCount())))
     else {
      sendCloudWatchLog(line)
      None

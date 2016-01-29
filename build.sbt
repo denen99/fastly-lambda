@@ -22,6 +22,11 @@ lazy val root = (project in file(".")).
     libraryDependencies += "org.specs2" %% "specs2-core" % "3.7" % "test"
   )
 
+
+fork in Test := true 
+
+javaOptions in Test += "-Dconfig.resource=application.test.conf"
+
 assemblyMergeStrategy in assembly  :=
    {
     case PathList("META-INF", xs @ _*) => MergeStrategy.discard

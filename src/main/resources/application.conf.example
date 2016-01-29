@@ -1,9 +1,25 @@
 event-types {
-  mydomain.com="FastlyProd"
+  yourdomain.com="FastlyDebug2"
   default="FastlyDebug"
 }
 
 newrelic {
-  apikey="YOUR-API-KEY"
-  apiUrl="https://insights-collector.newrelic.com/v1/accounts/YOURACCOUNT/events"
+  apikey="YOUR_API_KEY"
+  apiUrl="https://insights-collector.newrelic.com/v1/accounts/ACCOUNT_ID/events"
+}
+
+//Format is "regex group"="fieldname"
+regex {
+  pattern="[^ ]+\\s+([^ ]+)\\s+AmazonS3\\[\\d+\\]\\:\\s+(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})?\\s+(\\S{3}\\,\\s*\\d{1,2}\\s+\\S{3}\\s+\\d{4}\\s+\\d{2}\\:\\d{2}\\:\\d{2}\\s+\\S+)\\s+(\\S+)\\s+([^ ]+)\\s+(\\S+)\\s+(\\d{3})\\s+(HIT|MISS)(?:\\s*,\\s*)?(HIT|MISS)?\\s+([^ ]+)"
+  1="fastlyHost"
+  2="ip"
+  3="timestamp"
+  4="httpMethod"
+  5="uri"
+  6="hostname"
+  7="statusCode"
+  8="hitMissShield"
+  9="hitMissEdge"
+  10="referrer"
+  dateformat="EEE, dd MMM yyyy HH:mm:ss zzz"
 }
