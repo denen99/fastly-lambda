@@ -8,7 +8,7 @@ Copy src/main/resources/application.conf.example to src/main/application.conf fo
 
 ## Event Types
 
- In application.conf there is a block "event-types" that is used to map your logEntry to a NewRelic Insight "Event Type".  An Event Type in NewRelic Insights is how they filter your event data into different "buckets".  Currently the way this works is there is expected to be a "hostname" field in the regex section below.  That hostname is looked up here and if it is now found, the key "default" is used.  The "default" key is required.
+ In application.conf there is a block "event-types" that is used to map your logEntry to a NewRelic Insight "Event Type".  An Event Type in NewRelic Insights is how they filter your event data into different "buckets".  Currently the way this works is there is expected to be a "hostname" field in the regex section below.  That hostname is looked up here and if it is not found, the key "default" is used.  The "default" key is required.
  
 ## NewRelic 
 
@@ -24,7 +24,7 @@ The numbers simply represent a mapping of the regex group number [See Matcher](h
 
 There are 2 special fieldnames that are used in this model, "hostname" and "timestamp".   Hostname is used to lookup in the event-types {} configuration block to get a NewRelic Insight Event Type.  If no hostname field is provided, then it uses the event-types.default configuration parameter.
 
-The second special field is "timestamp".  NewRelic can accept a timestamp field that correlates to the timestamp of the event, versus the time of the API request.  Additionally, you can specify a "dateformat" string which will allow the app to convert the date format in the logfile to a proper Epoch time format. If there is no timestamp in the provided fields, NewRelic will just use the timestamp of the event.
+The second special field is "timestamp".  NewRelic can accept a timestamp field that correlates to the timestamp of the event, versus the time of the API request.  Additionally, you need to specify a "dateformat" config parameter which will allow the app to convert the date format in the logfile to a proper Epoch time format. If there is no timestamp in the provided fields, NewRelic will just use the timestamp of the event.
 
 ## Lambda 
 
