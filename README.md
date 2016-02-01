@@ -2,7 +2,7 @@
 
 A scala app to run on Amazon Lambda for Java that parses realtime logs from Amazon S3 shipped from Fastly and into NewRelic Insights.
 
-# Configuration 
+# 1. Configuration 
 
 Copy src/main/resources/application.conf.example to src/main/application.conf for production and src/main/application.test.conf for your unit tests
 
@@ -26,9 +26,16 @@ There are 2 special fieldnames that are used in this model, "hostname" and "time
 
 The second special field is "timestamp".  NewRelic can accept a timestamp field that correlates to the timestamp of the event, versus the time of the API request.  Additionally, you need to specify a "dateformat" config parameter which will allow the app to convert the date format in the logfile to a proper Epoch time format. If there is no timestamp in the provided fields, NewRelic will just use the timestamp of the event.
 
-## Testing
+# 2. Testing and Building
 
 You can create an application.test.conf to simulate your actual configuration.  You can then modify any of the unit tests with some of your own data to confirm your regexes are working as expected.  Simply run `sbt test` once you update.  
+
+
+ To build the application, simply type `sbt assembly` in the root and upload the jar to Lambda.  The jar is likely to exceed the 10MB upload limit, so you are going to have to upload the jar to S3 and paste in an S3 URL to Lambda for the new app.
+ 
+
+
+# 3. Deploying 
 
 ## Lambda 
 
