@@ -18,7 +18,7 @@ object Utils  {
   implicit class logEntryToJson(l: Seq[LogEntry]) {
     implicit val formats = DefaultFormats + FieldSerializer[LogEntry]()
 
-    def asJ = write(l)
+    def asJ = write(l.map(_.fields))
   }
 
   type EmptyResponse = String
