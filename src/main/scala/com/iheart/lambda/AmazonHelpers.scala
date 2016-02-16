@@ -7,7 +7,7 @@ import com.amazonaws.services.logs.AWSLogsClient
 import com.amazonaws.services.logs.model._
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.GetObjectRequest
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.io.Source
 
 
@@ -32,7 +32,7 @@ object AmazonHelpers {
     val req = new DescribeLogStreamsRequest(cwlLogGroup).withLogStreamNamePrefix(logStream)
     val descResult = cwlClient.describeLogStreams(req)
     if (descResult != null && descResult.getLogStreams != null && !descResult.getLogStreams.isEmpty) {
-      descResult.getLogStreams.last.getUploadSequenceToken
+      descResult.getLogStreams.asScala.last.getUploadSequenceToken
     }
     else {
       println("Creating log stream " + logStream)
@@ -49,7 +49,7 @@ object AmazonHelpers {
     val event = new InputLogEvent
     event.setTimestamp(new Date().getTime)
     event.setMessage(log)
-    val req = new PutLogEventsRequest(cwlLogGroup,logStream,List(event))
+    val req = new PutLogEventsRequest(cwlLogGroup,logStream,List(event).asJava)
     req.setSequenceToken(token)
     cwlClient.putLogEvents(req)
   }
